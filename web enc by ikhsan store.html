@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Web Enc By IkhsanStore — JS Encoder</title>
+  <style>
+    :root{
+      --bg:#000000;
+      --card:#0b0b0b;
+      --muted:#9ca3af;
+      --accent:#38bdf8;
+      --success:#10b981;
+      --danger:#ef4444;
+      color-scheme: dark;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#e6edf3}
+    .wrap{max-width:1100px;margin:24px auto;padding:18px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    header h1{font-size:20px;margin:0}
+    .watermark{font-size:12px;color:var(--muted)}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:14px;border-radius:10px; box-shadow:0 6px 18px rgba(2,6,23,0.6); margin-bottom:14px; border:1px solid rgba(255,255,255,0.03)}
+    label{display:block;font-size:13px;color:var(--muted); margin-bottom:8px}
+    input[type=file]{color:var(--muted)}
+    textarea{width:100%;min-height:240px;background:#070707;border:1px solid rgba(255,255,255,0.04); color:#e6edf3;padding:12px;border-radius:8px;font-family:monospace;font-size:13px;box-sizing:border-box;resize:vertical}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .btn{background:var(--accent); color:#022027; padding:8px 12px;border-radius:8px;border:0; cursor:pointer;font-weight:700}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04); color:var(--muted); padding:8px 10px;border-radius:8px;cursor:pointer}
+    .muted{color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;align-items:center;margin-top:12px}
+    .preset{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);cursor:pointer;user-select:none}
+    .active{outline:2px solid rgba(56,189,248,0.12)}
+    .footer{margin-top:10px;color:var(--muted);font-size:13px}
+    .download{background:var(--success); color:#042018}
+    .danger{background:var(--danger); color:#fff}
+    .preset-label{display:flex;gap:8px;align-items:center}
+    .small{font-size:12px;color:var(--muted)}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .logo{font-weight:800;color:var(--accent)}
+    .note{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-size:13px}
+  </style>
+
+  <!-- browser build of javascript-obfuscator via unpkg -->
+  <script src="https://unpkg.com/javascript-obfuscator/dist/index.browser.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="logo">Web Enc By IkhsanStore</div>
+        <div class="watermark">Black Background • Watermark added to output</div>
+      </div>
+      <div class="small muted">Made with ❤️ — Encode Levels: Low / Medium / Hard / Extreme</div>
+    </div>
+
+    <div class="card">
+      <label>1) Pilih file .js (atau paste kode di bawah)</label>
+      <input id="file" type="file" accept=".js" />
+      <div style="height:8px"></div>
+      <textarea id="inputCode" placeholder="// paste your JavaScript code here..."></textarea>
+      <div style="height:6px"></div>
+      <div class="note small">Jika file besar, gunakan Node/Termux untuk hasil lebih stabil. Preset Extreme bisa memakan banyak memori dan waktu.</div>
+    </div>
+
+    <div class="card">
+      <label>2) Pilih level encode</label>
+      <div class="row controls">
+        <div id="presetLow" class="preset preset-label active"><input type="radio" name="level" value="low" checked /> <span style="margin-left:6px">Low</span></div>
+        <div id="presetMedium" class="preset preset-label"><input type="radio" name="level" value="medium" /> <span style="margin-left:6px">Medium</span></div>
+        <div id="presetHard" class="preset preset-label"><input type="radio" name="level" value="hard" /> <span style="margin-left:6px">Hard</span></div>
+        <div id="presetExtreme" class="preset preset-label"><input type="radio" name="level" value="extreme" /> <span style="margin-left:6px">Extreme</span></div>
+
+        <button id="encodeBtn" class="btn">Encode</button>
+        <button id="clearBtn" class="btn-ghost">Clear</button>
+        <button id="downloadBtn" class="btn download" disabled>Download</button>
+        <button id="copyBtn" class="btn-ghost">Copy</button>
+        <div style="margin-left:auto" class="muted" id="status">Ready</div>
+      </div>
+      <div class="footer">Preset Low = ringan; Medium = seimbang; Hard = agresif; Extreme = sangat agresif (berisiko memecah runtime).</div>
+    </div>
+
+    <div class="card">
+      <label>3) Hasil encode (watermark di atas file hasil)</label>
+      <textarea id="outputCode" placeholder="// hasil akan muncul disini..." readonly></textarea>
+    </div>
+
+    <div class="card small">
+      <strong>Petunjuk singkat</strong>
+      <ul>
+        <li>Preset Extreme dapat membuat kode tidak berjalan pada environment tertentu — selalu backup sebelum pakai.</li>
+        <li>Watermark disisipkan sebagai komentar baris atas: <code>/*! Web Enc By IkhsanStore */</code></li>
+        <li>Gunakan desktop untuk file > 200KB agar browser tidak kehabisan memori.</li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+(function () {
+  if (typeof JavaScriptObfuscator === 'undefined') {
+    alert('Library javascript-obfuscator tidak dimuat. Pastikan koneksi internet aktif.');
+  }
+
+  const fileEl = document.getElementById('file');
+  const inputCode = document.getElementById('inputCode');
+  const outputCode = document.getElementById('outputCode');
+  const encodeBtn = document.getElementById('encodeBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const status = document.getElementById('status');
+
+  const presetEls = {
+    low: document.getElementById('presetLow'),
+    medium: document.getElementById('presetMedium'),
+    hard: document.getElementById('presetHard'),
+    extreme: document.getElementById('presetExtreme')
+  };
+
+  let currentLevel = 'low';
+  let lastOutput = '';
+  let lastFilename = 'obfuscated.js';
+
+  // Preset option sets
+  const optsLow = {
+    compact: true,
+    controlFlowFlattening: false,
+    deadCodeInjection: false,
+    stringArray: true,
+    stringArrayThreshold: 0.3,
+    stringArrayEncoding: ['none'],
+    identifierNamesGenerator: 'mangled',
+    disableConsoleOutput: false
+  };
+
+  const optsMedium = {
+    compact: true,
+    controlFlowFlattening: true,
+    controlFlowFlatteningThreshold: 0.6,
+    deadCodeInjection: true,
+    deadCodeInjectionThreshold: 0.35,
+    stringArray: true,
+    stringArrayThreshold: 0.75,
+    stringArrayEncoding: ['base64'],
+    rotateStringArray: true,
+    stringArrayIndexShift: true,
+    identifierNamesGenerator: 'mangled',
+    selfDefending: false,
+    disableConsoleOutput: true
+  };
+
+  const optsHard = {
+    compact: true,
+    controlFlowFlattening: true,
+    controlFlowFlatteningThreshold: 0.9,
+    deadCodeInjection: true,
+    deadCodeInjectionThreshold: 0.75,
+    stringArray: true,
+    stringArrayThreshold: 1,
+    stringArrayEncoding: ['base64'],
+    rotateStringArray: true,
+    stringArrayIndexShift: true,
+    identifierNamesGenerator: 'hexadecimal',
+    selfDefending: true,
+    disableConsoleOutput: true,
+    renameGlobals: true
+  };
+
+  const optsExtreme = {
+    compact: true,
+    controlFlowFlattening: true,
+    controlFlowFlatteningThreshold: 1,
+    deadCodeInjection: true,
+    deadCodeInjectionThreshold: 0.95,
+    stringArray: true,
+    stringArrayThreshold: 1,
+    stringArrayEncoding: ['base64'],
+    rotateStringArray: true,
+    stringArrayIndexShift: true,
+    identifierNamesGenerator: 'hexadecimal',
+    selfDefending: true,
+    disableConsoleOutput: true,
+    renameGlobals: true,
+    transformObjectKeys: true
+  };
+
+  function setActive(level) {
+    currentLevel = level;
+    Object.keys(presetEls).forEach(k => presetEls[k].classList.toggle('active', k === level));
+    lastFilename = 'obfuscated-' + level + '.js';
+  }
+
+  // radio clicks
+  presetEls.low.addEventListener('click', () => setActive('low'));
+  presetEls.medium.addEventListener('click', () => setActive('medium'));
+  presetEls.hard.addEventListener('click', () => setActive('hard'));
+  presetEls.extreme.addEventListener('click', () => setActive('extreme'));
+
+  fileEl.addEventListener('change', async (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    lastFilename = f.name.replace(/\.js$/i, '') + '-' + currentLevel + '.js';
+    const text = await f.text();
+    inputCode.value = text;
+    status.textContent = `Loaded: ${f.name}`;
+  });
+
+  clearBtn.addEventListener('click', () => {
+    inputCode.value = '';
+    outputCode.value = '';
+    downloadBtn.disabled = true;
+    status.textContent = 'Cleared';
+  });
+
+  encodeBtn.addEventListener('click', async () => {
+    const src = inputCode.value;
+    if (!src || !src.trim()) {
+      alert('Masukkan kode JS atau pilih file .js terlebih dahulu.');
+      return;
+    }
+
+    // choose options
+    let opts;
+    switch (currentLevel) {
+      case 'low': opts = optsLow; break;
+      case 'medium': opts = optsMedium; break;
+      case 'hard': opts = optsHard; break;
+      case 'extreme': opts = optsExtreme; break;
+      default: opts = optsMedium;
+    }
+
+    try {
+      status.textContent = 'Encoding... (jangan tutup tab)';
+      // allow UI update
+      await new Promise(r => setTimeout(r, 50));
+
+      const obfuscated = JavaScriptObfuscator.obfuscate(src, opts);
+      let result = obfuscated.getObfuscatedCode();
+
+      // prepend watermark comment so it's visible in result
+      const watermark = "/*! Web Enc By IkhsanStore */\\n";
+      result = watermark + result;
+
+      outputCode.value = result;
+      lastOutput = result;
+      downloadBtn.disabled = false;
+      status.textContent = `Selesai — ${currentLevel.toUpperCase()}`;
+    } catch (err) {
+      console.error(err);
+      alert('Error saat encoding: ' + err);
+      status.textContent = 'Error';
+    }
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    if (!lastOutput) return;
+    const blob = new Blob([lastOutput], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = lastFilename || 'obfuscated.js';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!lastOutput) return;
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      status.textContent = 'Copied to clipboard';
+    } catch {
+      alert('Gagal menyalin ke clipboard (browser tidak mendukung). Silakan download.');
+    }
+  });
+
+  // keyboard shortcut: Ctrl+Enter encode
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      encodeBtn.click();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
